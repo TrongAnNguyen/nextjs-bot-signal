@@ -99,9 +99,6 @@ export function detectBearishDivergence(
 
     // Strict filter: was the first RSI in overbought territory?
     const strict = prev.rsi > overboughtLevel;
-    console.log(
-      `Pref rsi: ${prev.rsi} - overbought level: ${overboughtLevel} - strict: ${strict}`,
-    );
 
     return {
       type: "bearish",
