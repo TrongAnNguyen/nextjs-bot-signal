@@ -8,6 +8,8 @@ interface BacktestFormProps {
   onTimeframeChange: (val: string) => void;
   limit: number;
   onLimitChange: (val: number) => void;
+  pivotStrength: number;
+  onPivotStrengthChange: (val: number) => void;
   onRun: () => void;
   isPending: boolean;
 }
@@ -20,6 +22,8 @@ export const BacktestForm = memo(
     onTimeframeChange,
     limit,
     onLimitChange,
+    pivotStrength,
+    onPivotStrengthChange,
     onRun,
     isPending,
   }: BacktestFormProps) => (
@@ -53,7 +57,7 @@ export const BacktestForm = memo(
           onChange={(e) => onTimeframeChange(e.target.value)}
           className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
         >
-          {["1m", "5m", "15m", "1h", "4h", "1d"].map((tf) => (
+          {["5m", "15m", "30m", "1h", "4h", "1d"].map((tf) => (
             <option key={tf} value={tf}>
               {tf}
             </option>
@@ -75,6 +79,23 @@ export const BacktestForm = memo(
           className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           max={1000}
           min={100}
+        />
+      </div>
+      <div className="space-y-1">
+        <label
+          htmlFor="pivotStrength"
+          className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+        >
+          Pivot Strength
+        </label>
+        <input
+          id="pivotStrength"
+          type="number"
+          value={pivotStrength}
+          onChange={(e) => onPivotStrengthChange(parseInt(e.target.value))}
+          className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+          max={100}
+          min={1}
         />
       </div>
       <button

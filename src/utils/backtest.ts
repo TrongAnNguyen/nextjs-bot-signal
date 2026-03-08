@@ -73,6 +73,7 @@ export async function runBacktest(
   symbol: string,
   timeframe: string,
   limit: number = 500,
+  pivotStrength: number = config.pivotStrength,
 ): Promise<BacktestResult> {
   // 1. Fetch candles
   const candles = await fetchCandles(symbol, timeframe, limit);
@@ -82,8 +83,8 @@ export async function runBacktest(
   const rsiValues = calculateRSI(closePrices, config.rsiPeriod);
 
   // 3. Find Pivots
-  const pivotLows = findPivotLows(candles, rsiValues, config.pivotStrength);
-  const pivotHighs = findPivotHighs(candles, rsiValues, config.pivotStrength);
+  const pivotLows = findPivotLows(candles, rsiValues, pivotStrength);
+  const pivotHighs = findPivotHighs(candles, rsiValues, pivotStrength);
 
   // 4. Detect All Divergences
   const bullishSignals = findAllDivergences(

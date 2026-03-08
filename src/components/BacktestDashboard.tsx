@@ -28,6 +28,7 @@ export default function BacktestDashboard({
   const [symbol, setSymbol] = useState(initialSymbol);
   const [timeframe, setTimeframe] = useState("1h");
   const [limit, setLimit] = useState(500);
+  const [pivotStrength, setPivotStrength] = useState(8);
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<BacktestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +41,7 @@ export default function BacktestDashboard({
           symbol,
           timeframe,
           limit: limit.toString(),
+          pivotStrength: pivotStrength.toString(),
         });
         const resp = await fetch(`/api/backtest?${params.toString()}`);
         const json = await resp.json();
@@ -51,10 +53,10 @@ export default function BacktestDashboard({
         setError((err as Error).message);
       }
     });
-  }, [symbol, timeframe, limit]);
+  }, [symbol, timeframe, limit, pivotStrength]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 space-y-8 pb-20">
+    <div className="w-full max-w-360 mx-auto p-4 space-y-8 pb-20">
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 bg-white p-8 rounded-4xl border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 shadow-sm transition-all duration-300">
         <BacktestHeader />
         <BacktestForm
@@ -64,6 +66,8 @@ export default function BacktestDashboard({
           onTimeframeChange={setTimeframe}
           limit={limit}
           onLimitChange={setLimit}
+          pivotStrength={pivotStrength}
+          onPivotStrengthChange={setPivotStrength}
           onRun={fetchBacktest}
           isPending={isPending}
         />
