@@ -39,7 +39,7 @@ export function initTelegram(): Telegraf | null {
         `• Symbols: ${symbols}\n` +
         `• Timeframes: ${timeframes}\n` +
         `• Scan interval: ${config.scanIntervalMs / 1000}s\n` +
-        `• Pivot strength: ${config.pivotStrength}`,
+        `• Pivot strength: L=${config.pivotStrength}, R=${config.pivotRightStrength}`,
       { parse_mode: "Markdown" },
     );
   });

@@ -23,6 +23,7 @@ export const config = {
 
   // --- Pivot detection ---
   pivotStrength: Number(process.env.PIVOT_STRENGTH) || 3,
+  pivotRightStrength: Number(process.env.PIVOT_RIGHT_STRENGTH) || 2,
 
   // --- RSI ---
   rsiPeriod: Number(process.env.RSI_PERIOD) || 14,

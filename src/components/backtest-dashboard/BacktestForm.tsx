@@ -10,6 +10,8 @@ interface BacktestFormProps {
   onLimitChange: (val: number) => void;
   pivotStrength: number;
   onPivotStrengthChange: (val: number) => void;
+  pivotRightStrength: number;
+  onPivotRightStrengthChange: (val: number) => void;
   onRun: () => void;
   isPending: boolean;
 }
@@ -24,6 +26,8 @@ export const BacktestForm = memo(
     onLimitChange,
     pivotStrength,
     onPivotStrengthChange,
+    pivotRightStrength,
+    onPivotRightStrengthChange,
     onRun,
     isPending,
   }: BacktestFormProps) => (
@@ -86,14 +90,31 @@ export const BacktestForm = memo(
           htmlFor="pivotStrength"
           className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
         >
-          Pivot Strength
+          Left Pivot
         </label>
         <input
           id="pivotStrength"
           type="number"
           value={pivotStrength}
           onChange={(e) => onPivotStrengthChange(parseInt(e.target.value))}
-          className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+          className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm w-20 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+          max={100}
+          min={1}
+        />
+      </div>
+      <div className="space-y-1">
+        <label
+          htmlFor="pivotRightStrength"
+          className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+        >
+          Right Pivot
+        </label>
+        <input
+          id="pivotRightStrength"
+          type="number"
+          value={pivotRightStrength}
+          onChange={(e) => onPivotRightStrengthChange(parseInt(e.target.value))}
+          className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm w-20 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           max={100}
           min={1}
         />

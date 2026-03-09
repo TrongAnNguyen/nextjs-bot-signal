@@ -29,7 +29,7 @@ export async function scanSymbolTimeframe(
 
   // 1. Fetch candles
   const candles = await fetchCandles(symbol, timeframe, config.candleLimit);
-  if (candles.length < config.rsiPeriod + config.pivotStrength * 2) {
+  if (candles.length < config.rsiPeriod + config.pivotStrength + config.pivotRightStrength) {
     console.log(
       `[Scanner] Not enough candles for ${symbol} ${timeframe} (got ${candles.length})`,
     );
@@ -41,7 +41,7 @@ export async function scanSymbolTimeframe(
   const rsiValues = calculateRSI(closePrices, config.rsiPeriod);
 
   // 3. Find Pivot Lows → detect Bullish Divergence
-  const pivotLows = findPivotLows(candles, rsiValues, config.pivotStrength);
+  const pivotLows = findPivotLows(candles, rsiValues, config.pivotStrength, config.pivotRightStrength);
   const bullish = detectBullishDivergence(
     pivotLows,
     symbol,
@@ -59,7 +59,7 @@ export async function scanSymbolTimeframe(
   }
 
   // 4. Find Pivot Highs → detect Bearish Divergence
-  const pivotHighs = findPivotHighs(candles, rsiValues, config.pivotStrength);
+  const pivotHighs = findPivotHighs(candles, rsiValues, config.pivotStrength, config.pivotRightStrength);
   const bearish = detectBearishDivergence(
     pivotHighs,
     symbol,

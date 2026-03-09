@@ -8,22 +8,23 @@ import { Candle, Pivot } from "./types";
  * Find Pivot Lows (troughs).
  *
  * A candle at index `i` is a Pivot Low if its `low` price is
- * strictly lower than the `low` of the N candles before AND
- * the N candles after it.
+ * strictly lower than the `low` of the leftBars candles before AND
+ * the rightBars candles after it.
  */
 export function findPivotLows(
   candles: Candle[],
   rsiValues: number[],
-  n: number,
+  leftBars: number,
+  rightBars: number,
 ): Pivot[] {
   const pivots: Pivot[] = [];
 
-  for (let i = n; i < candles.length - n; i++) {
+  for (let i = leftBars; i < candles.length - rightBars; i++) {
     const currentLow = candles[i].low;
     let isPivot = true;
 
-    // Check N candles before
-    for (let j = 1; j <= n; j++) {
+    // Check leftBars before
+    for (let j = 1; j <= leftBars; j++) {
       if (currentLow >= candles[i - j].low) {
         isPivot = false;
         break;
@@ -32,8 +33,8 @@ export function findPivotLows(
 
     if (!isPivot) continue;
 
-    // Check N candles after
-    for (let j = 1; j <= n; j++) {
+    // Check rightBars after
+    for (let j = 1; j <= rightBars; j++) {
       if (currentLow >= candles[i + j].low) {
         isPivot = false;
         break;
@@ -58,22 +59,23 @@ export function findPivotLows(
  * Find Pivot Highs (peaks).
  *
  * A candle at index `i` is a Pivot High if its `high` price is
- * strictly higher than the `high` of the N candles before AND
- * the N candles after it.
+ * strictly higher than the `high` of the leftBars candles before AND
+ * the rightBars candles after it.
  */
 export function findPivotHighs(
   candles: Candle[],
   rsiValues: number[],
-  n: number,
+  leftBars: number,
+  rightBars: number,
 ): Pivot[] {
   const pivots: Pivot[] = [];
 
-  for (let i = n; i < candles.length - n; i++) {
+  for (let i = leftBars; i < candles.length - rightBars; i++) {
     const currentHigh = candles[i].high;
     let isPivot = true;
 
-    // Check N candles before
-    for (let j = 1; j <= n; j++) {
+    // Check leftBars before
+    for (let j = 1; j <= leftBars; j++) {
       if (currentHigh <= candles[i - j].high) {
         isPivot = false;
         break;
@@ -82,8 +84,8 @@ export function findPivotHighs(
 
     if (!isPivot) continue;
 
-    // Check N candles after
-    for (let j = 1; j <= n; j++) {
+    // Check rightBars after
+    for (let j = 1; j <= rightBars; j++) {
       if (currentHigh <= candles[i + j].high) {
         isPivot = false;
         break;
