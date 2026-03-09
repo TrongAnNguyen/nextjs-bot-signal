@@ -13,15 +13,12 @@ const ALERT_TTL_SECONDS = 12 * 60 * 60; // 12 hours
 
 /**
  * Generate a unique dedup key for an alert.
- * Two alerts are the same if they share the same timeframe, price, RSI, and direction.
+ * Two alerts are the same if they share the same timeframe, price, and direction.
  * We build the key from each individual signal's properties.
  */
 function getAlertDeduplicationKey(alert: ConfluenceAlert): string {
   const signalFingerprints = alert.signals
-    .map(
-      (s) =>
-        `${s.timeframe}:${s.currentPivot.price}:${s.currentPivot.rsi.toFixed(2)}:${s.type}`,
-    )
+    .map((s) => `${s.timeframe}:${s.currentPivot.price}:${s.type}`)
     .sort()
     .join("|");
 
