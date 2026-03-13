@@ -24,9 +24,20 @@ export interface Pivot {
 /** Type of divergence signal */
 export type DivergenceType = "bullish" | "bearish";
 
+/** Category of divergence (Regular vs Hidden) */
+export type DivergenceCategory = "regular" | "hidden";
+
+/** MACD calculation result */
+export interface MACDResult {
+  MACD: number;
+  signal: number;
+  histogram: number;
+}
+
 /** A single divergence detection result */
 export interface DivergenceSignal {
   type: DivergenceType;
+  category: DivergenceCategory;
   symbol: string;
   timeframe: string;
   currentPivot: Pivot;
@@ -34,6 +45,9 @@ export interface DivergenceSignal {
   confirmed: boolean;
   /** true if first RSI pivot was in oversold (<30) or overbought (>70) zone */
   strict: boolean;
+  /** Optional confluence data */
+  ema200?: number;
+  macd?: MACDResult;
 }
 
 /** Result of scanning one symbol on one timeframe */

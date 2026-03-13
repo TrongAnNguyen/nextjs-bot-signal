@@ -19,7 +19,7 @@ export const config = {
 
   // --- Scanning ---
   scanIntervalMs: Number(process.env.SCAN_INTERVAL_MS) || 60_000,
-  candleLimit: Number(process.env.CANDLE_LIMIT) || 300,
+  candleLimit: Number(process.env.CANDLE_LIMIT) || 500, // Increased for EMA stability
 
   // --- Pivot detection ---
   pivotStrength: Number(process.env.PIVOT_STRENGTH) || 3,
@@ -28,9 +28,19 @@ export const config = {
   // --- RSI ---
   rsiPeriod: Number(process.env.RSI_PERIOD) || 14,
 
+  // --- MACD ---
+  macdFast: 12,
+  macdSlow: 26,
+  macdSignal: 9,
+  macdCrossoverLookback: 5,
+
+  // --- EMA ---
+  emaPeriod: 200,
+
   // --- Divergence validation ---
   minPivotDistance: Number(process.env.MIN_PIVOT_DISTANCE) || 5,
   maxPivotDistance: Number(process.env.MAX_PIVOT_DISTANCE) || 50,
+  hiddenDivergenceLookback: 5,
 } as const;
 
 export type Config = typeof config;
