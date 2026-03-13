@@ -1,12 +1,13 @@
 import { memo } from "react";
 import {
-  LineChart,
+  ComposedChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Scatter,
 } from "recharts";
 import { BacktestSeriesPoint } from "@/utils/backtest";
 import { CustomTooltip } from "./CustomTooltip";
@@ -16,11 +17,11 @@ export const PriceChart = memo(
   ({ series }: { series: BacktestSeriesPoint[] }) => (
     <div className="bg-white p-8 rounded-3xl border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 shadow-sm overflow-hidden group">
       <h3 className="text-xs font-bold mb-8 flex items-center gap-2 text-zinc-400 tracking-widest uppercase">
-        PRICE ACTION & SIGNALS
+        PRICE & CONFLUENCE
       </h3>
-      <div className="h-[450px] w-full">
+      <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={series}>
+          <ComposedChart data={series}>
             <CartesianGrid
               strokeDasharray="4 4"
               vertical={false}
@@ -42,48 +43,42 @@ export const PriceChart = memo(
               axisLine={false}
               tickLine={false}
               stroke="#94a3b8"
-              tickFormatter={(val) => `$${val.toLocaleString()}`}
             />
             <Tooltip content={<CustomTooltip />} />
+            
             <Line
               type="monotone"
               dataKey="close"
-              stroke="#10b981"
-              strokeWidth={2.5}
-              activeDot={{ r: 5, strokeWidth: 0 }}
-              dot={(props: any) => {
-                const { cx, cy, payload, key } = props;
-                const type = payload?.divergence?.type;
-                if (type === "bullish") {
-                  return (
-                    <circle
-                      key={key}
-                      cx={cx}
-                      cy={cy}
-                      r={7}
-                      fill="#10b981"
-                      stroke="#fff"
-                      strokeWidth={3}
-                    />
-                  );
-                }
-                if (type === "bearish") {
-                  return (
-                    <circle
-                      key={key}
-                      cx={cx}
-                      cy={cy}
-                      r={7}
-                      fill="#ef4444"
-                      stroke="#fff"
-                      strokeWidth={3}
-                    />
-                  );
-                }
-                return <g key={key}></g>;
-              }}
+              stroke="#1f2937"
+              strokeWidth={2}
+              dot={false}
+              name="Price"
+              isAnimationActive={false}
             />
-          </LineChart>
+
+            <Line
+              type="monotone"
+              dataKey="ema200"
+              stroke="#2563eb"
+              strokeWidth={1.5}
+              strokeDasharray="6 6"
+              dot={false}
+              name="EMA 200"
+              isAnimationActive={false}
+            />
+
+            <Scatter
+              name="Bullish Divergence"
+              dataKey={(point) => (point.divergence?.type === "bullish" ? point.low * 0.995 : null)}
+              fill="#10b981"
+            />
+
+            <Scatter
+              name="Bearish Divergence"
+              dataKey={(point) => (point.divergence?.type === "bearish" ? point.high * 1.005 : null)}
+              fill="#ef4444"
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>

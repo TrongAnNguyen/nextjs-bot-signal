@@ -1,9 +1,14 @@
 import { config } from "./config";
 import { fetchCandles } from "./exchange";
-import { calculateRSI } from "./indicators";
+import { calculateRSI, calculateEMA, calculateMACD } from "./indicators";
 import { findPivotLows, findPivotHighs } from "./pivots";
-import { detectBullishDivergence, detectBearishDivergence } from "./divergence";
-import { DivergenceSignal, Pivot } from "./types";
+import { 
+  detectBullishDivergence, 
+  detectBearishDivergence,
+  detectHiddenBullishDivergence,
+  detectHiddenBearishDivergence 
+} from "./divergence";
+import { DivergenceSignal, Pivot, MACDResult } from "./types";
 
 export interface BacktestSeriesPoint {
   timestamp: number;
@@ -12,6 +17,8 @@ export interface BacktestSeriesPoint {
   low: number;
   close: number;
   rsi: number;
+  ema200?: number;
+  macd?: MACDResult;
   divergence?: DivergenceSignal;
 }
 
@@ -37,32 +44,24 @@ function findAllDivergences(
 ): DivergenceSignal[] {
   const allSignals: DivergenceSignal[] = [];
 
-  // We need at least 2 pivots to compare
   for (let i = 1; i < pivots.length; i++) {
-    // We can reuse the detection logic by passing a slice of pivots up to the current one
     const pivotsUntilNow = pivots.slice(0, i + 1);
 
-    let signal: DivergenceSignal | null = null;
+    let signals: (DivergenceSignal | null)[] = [];
     if (type === "bullish") {
-      signal = detectBullishDivergence(
-        pivotsUntilNow,
-        symbol,
-        timeframe,
-        config.minPivotDistance,
-        config.maxPivotDistance,
-      );
+      signals = [
+        detectBullishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance),
+        detectHiddenBullishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance)
+      ];
     } else {
-      signal = detectBearishDivergence(
-        pivotsUntilNow,
-        symbol,
-        timeframe,
-        config.minPivotDistance,
-        config.maxPivotDistance,
-      );
+      signals = [
+        detectBearishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance),
+        detectHiddenBearishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance)
+      ];
     }
 
-    if (signal) {
-      allSignals.push(signal);
+    for (const signal of signals) {
+      if (signal) allSignals.push(signal);
     }
   }
 
@@ -76,32 +75,19 @@ export async function runBacktest(
   pivotStrength: number = config.pivotStrength,
   pivotRightStrength: number = config.pivotRightStrength,
 ): Promise<BacktestResult> {
-  // 1. Fetch candles
   const candles = await fetchCandles(symbol, timeframe, limit);
 
-  // 2. Calculate RSI
   const closePrices = candles.map((c) => c.close);
   const rsiValues = calculateRSI(closePrices, config.rsiPeriod);
+  const ema200Values = calculateEMA(closePrices, config.emaPeriod);
+  const macdValues = calculateMACD(closePrices, config.macdFast, config.macdSlow, config.macdSignal);
 
-  // 3. Find Pivots
   const pivotLows = findPivotLows(candles, rsiValues, pivotStrength, pivotRightStrength);
   const pivotHighs = findPivotHighs(candles, rsiValues, pivotStrength, pivotRightStrength);
 
-  // 4. Detect All Divergences
-  const bullishSignals = findAllDivergences(
-    pivotLows,
-    "bullish",
-    symbol,
-    timeframe,
-  );
-  const bearishSignals = findAllDivergences(
-    pivotHighs,
-    "bearish",
-    symbol,
-    timeframe,
-  );
+  const bullishSignals = findAllDivergences(pivotLows, "bullish", symbol, timeframe);
+  const bearishSignals = findAllDivergences(pivotHighs, "bearish", symbol, timeframe);
 
-  // 5. Build Series with Markers
   const series: BacktestSeriesPoint[] = candles.map((candle, i) => {
     const point: BacktestSeriesPoint = {
       timestamp: candle.timestamp,
@@ -110,9 +96,10 @@ export async function runBacktest(
       low: candle.low,
       close: candle.close,
       rsi: rsiValues[i],
+      ema200: ema200Values[i],
+      macd: macdValues[i] || undefined,
     };
 
-    // Check if there's a signal at this specific candle index
     const bull = bullishSignals.find((s) => s.currentPivot.index === i);
     const bear = bearishSignals.find((s) => s.currentPivot.index === i);
 

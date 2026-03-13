@@ -10,6 +10,7 @@ import { BacktestForm } from "./backtest-dashboard/BacktestForm";
 import { BacktestSummary } from "./backtest-dashboard/BacktestSummary";
 import { PriceChart } from "./backtest-dashboard/PriceChart";
 import { RSIChart } from "./backtest-dashboard/RSIChart";
+import { MACDChart } from "./backtest-dashboard/MACDChart";
 import { AlertCircle } from "./backtest-dashboard/utils";
 
 interface BacktestDashboardProps {
@@ -91,6 +92,7 @@ export default function BacktestDashboard({
           <div className="space-y-8">
             <PriceChart series={data.series} />
             <RSIChart series={data.series} />
+            <MACDChart series={data.series} />
           </div>
         </div>
       ) : !isPending ? (
