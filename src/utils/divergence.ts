@@ -1,17 +1,13 @@
 import { Pivot, DivergenceSignal } from "./types";
+import { config } from "./config";
 
 // ============================================================
-// Divergence Detection — bullish & bearish
+// Divergence Detection — regular & hidden
 // ============================================================
 
 /**
- * Detect Bullish Divergence from the last two Pivot Lows.
- *
- * Conditions:
- *   - Price:  current pivot LOW  < previous pivot LOW   (Lower Low)
- *   - RSI:    current pivot RSI  > previous pivot RSI   (Higher Low)
- *   - Strict: first RSI pivot is in oversold zone (< 30)
- *   - Distance between pivots is within [minDist, maxDist]
+ * Detect Regular Bullish Divergence from the last two Pivot Lows.
+ * Conditions: Price LL, RSI HL
  */
 export function detectBullishDivergence(
   pivotLows: Pivot[],
@@ -32,21 +28,20 @@ export function detectBullishDivergence(
     const prev = pivotLows[i];
     const distance = curr.index - prev.index;
 
-    // Validate distance
     if (distance < minDist) continue;
-    if (distance > maxDist) break; // Optimization: pivots are sorted by index, so distance only grows
+    if (distance > maxDist) break;
 
     // Price: Lower Low or Double Bottom
     if (curr.price > prev.price) continue;
 
-    // RSI: Higher Low (diverging from price)
+    // RSI: Higher Low
     if (curr.rsi <= prev.rsi) continue;
 
-    // Strict filter: was the first RSI in oversold territory?
     const strict = prev.rsi < oversoldLevel;
 
     return {
       type: "bullish",
+      category: "regular",
       symbol,
       timeframe,
       currentPivot: curr,
@@ -60,13 +55,54 @@ export function detectBullishDivergence(
 }
 
 /**
- * Detect Bearish Divergence from the last two Pivot Highs.
- *
- * Conditions:
- *   - Price:  current pivot HIGH > previous pivot HIGH  (Higher High)
- *   - RSI:    current pivot RSI  < previous pivot RSI   (Lower High)
- *   - Strict: first RSI pivot is in overbought zone (> 70)
- *   - Distance between pivots is within [minDist, maxDist]
+ * Detect Hidden Bullish Divergence from the last two Pivot Lows.
+ * Conditions: Price HL, RSI LL
+ */
+export function detectHiddenBullishDivergence(
+  pivotLows: Pivot[],
+  symbol: string,
+  timeframe: string,
+  minDist: number,
+  maxDist: number,
+  maxLookback: number = config.hiddenDivergenceLookback,
+): DivergenceSignal | null {
+  if (pivotLows.length < 2) return null;
+
+  const curr = pivotLows[pivotLows.length - 1];
+  const startIndex = pivotLows.length - 2;
+  const endIndex = Math.max(0, pivotLows.length - 1 - maxLookback);
+
+  for (let i = startIndex; i >= endIndex; i--) {
+    const prev = pivotLows[i];
+    const distance = curr.index - prev.index;
+
+    if (distance < minDist) continue;
+    if (distance > maxDist) break;
+
+    // Price: Higher Low (curr > prev)
+    if (curr.price <= prev.price) continue;
+
+    // RSI: Lower Low (curr < prev)
+    if (curr.rsi >= prev.rsi) continue;
+
+    return {
+      type: "bullish",
+      category: "hidden",
+      symbol,
+      timeframe,
+      currentPivot: curr,
+      previousPivot: prev,
+      confirmed: true,
+      strict: false,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detect Regular Bearish Divergence from the last two Pivot Highs.
+ * Conditions: Price HH, RSI LH
  */
 export function detectBearishDivergence(
   pivotHighs: Pivot[],
@@ -87,27 +123,72 @@ export function detectBearishDivergence(
     const prev = pivotHighs[i];
     const distance = curr.index - prev.index;
 
-    // Validate distance
     if (distance < minDist) continue;
-    if (distance > maxDist) break; // Optimization: pivots are sorted by index, so distance only grows
+    if (distance > maxDist) break;
 
     // Price: Higher High or Double Top
     if (curr.price < prev.price) continue;
 
-    // RSI: Lower High (diverging from price)
+    // RSI: Lower High
     if (curr.rsi >= prev.rsi) continue;
 
-    // Strict filter: was the first RSI in overbought territory?
     const strict = prev.rsi > overboughtLevel;
 
     return {
       type: "bearish",
+      category: "regular",
       symbol,
       timeframe,
       currentPivot: curr,
       previousPivot: prev,
       confirmed: true,
       strict,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detect Hidden Bearish Divergence from the last two Pivot Highs.
+ * Conditions: Price LH, RSI HH
+ */
+export function detectHiddenBearishDivergence(
+  pivotHighs: Pivot[],
+  symbol: string,
+  timeframe: string,
+  minDist: number,
+  maxDist: number,
+  maxLookback: number = config.hiddenDivergenceLookback,
+): DivergenceSignal | null {
+  if (pivotHighs.length < 2) return null;
+
+  const curr = pivotHighs[pivotHighs.length - 1];
+  const startIndex = pivotHighs.length - 2;
+  const endIndex = Math.max(0, pivotHighs.length - 1 - maxLookback);
+
+  for (let i = startIndex; i >= endIndex; i--) {
+    const prev = pivotHighs[i];
+    const distance = curr.index - prev.index;
+
+    if (distance < minDist) continue;
+    if (distance > maxDist) break;
+
+    // Price: Lower High (curr < prev)
+    if (curr.price >= prev.price) continue;
+
+    // RSI: Higher High (curr > prev)
+    if (curr.rsi <= prev.rsi) continue;
+
+    return {
+      type: "bearish",
+      category: "hidden",
+      symbol,
+      timeframe,
+      currentPivot: curr,
+      previousPivot: prev,
+      confirmed: true,
+      strict: false,
     };
   }
 
