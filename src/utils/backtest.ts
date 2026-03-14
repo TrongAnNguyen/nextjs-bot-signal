@@ -2,11 +2,11 @@ import { config } from "./config";
 import { fetchCandles } from "./exchange";
 import { calculateRSI, calculateEMA, calculateMACD } from "./indicators";
 import { findPivotLows, findPivotHighs } from "./pivots";
-import { 
-  detectBullishDivergence, 
+import {
+  detectBullishDivergence,
   detectBearishDivergence,
   detectHiddenBullishDivergence,
-  detectHiddenBearishDivergence 
+  detectHiddenBearishDivergence,
 } from "./divergence";
 import { DivergenceSignal, Pivot, MACDResult } from "./types";
 
@@ -50,13 +50,37 @@ function findAllDivergences(
     let signals: (DivergenceSignal | null)[] = [];
     if (type === "bullish") {
       signals = [
-        detectBullishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance),
-        detectHiddenBullishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance)
+        detectBullishDivergence(
+          pivotsUntilNow,
+          symbol,
+          timeframe,
+          config.minPivotDistance,
+          config.maxPivotDistance,
+        ),
+        detectHiddenBullishDivergence(
+          pivotsUntilNow,
+          symbol,
+          timeframe,
+          config.minPivotDistance,
+          config.maxPivotDistance,
+        ),
       ];
     } else {
       signals = [
-        detectBearishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance),
-        detectHiddenBearishDivergence(pivotsUntilNow, symbol, timeframe, config.minPivotDistance, config.maxPivotDistance)
+        detectBearishDivergence(
+          pivotsUntilNow,
+          symbol,
+          timeframe,
+          config.minPivotDistance,
+          config.maxPivotDistance,
+        ),
+        detectHiddenBearishDivergence(
+          pivotsUntilNow,
+          symbol,
+          timeframe,
+          config.minPivotDistance,
+          config.maxPivotDistance,
+        ),
       ];
     }
 
@@ -80,13 +104,38 @@ export async function runBacktest(
   const closePrices = candles.map((c) => c.close);
   const rsiValues = calculateRSI(closePrices, config.rsiPeriod);
   const ema200Values = calculateEMA(closePrices, config.emaPeriod);
-  const macdValues = calculateMACD(closePrices, config.macdFast, config.macdSlow, config.macdSignal);
+  const macdValues = calculateMACD(
+    closePrices,
+    config.macdFast,
+    config.macdSlow,
+    config.macdSignal,
+  );
 
-  const pivotLows = findPivotLows(candles, rsiValues, pivotStrength, pivotRightStrength);
-  const pivotHighs = findPivotHighs(candles, rsiValues, pivotStrength, pivotRightStrength);
+  const pivotLows = findPivotLows(
+    candles,
+    rsiValues,
+    pivotStrength,
+    pivotRightStrength,
+  );
+  const pivotHighs = findPivotHighs(
+    candles,
+    rsiValues,
+    pivotStrength,
+    pivotRightStrength,
+  );
 
-  const bullishSignals = findAllDivergences(pivotLows, "bullish", symbol, timeframe);
-  const bearishSignals = findAllDivergences(pivotHighs, "bearish", symbol, timeframe);
+  const bullishSignals = findAllDivergences(
+    pivotLows,
+    "bullish",
+    symbol,
+    timeframe,
+  );
+  const bearishSignals = findAllDivergences(
+    pivotHighs,
+    "bearish",
+    symbol,
+    timeframe,
+  );
 
   const series: BacktestSeriesPoint[] = candles.map((candle, i) => {
     const point: BacktestSeriesPoint = {
