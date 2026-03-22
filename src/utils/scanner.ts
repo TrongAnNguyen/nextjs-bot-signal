@@ -48,13 +48,29 @@ function validateSignal(
   macds: (MACDResult | null)[], 
   price: number
 ): boolean {
-  // 1. Trend Filter: Price vs EMA200 (Same TF Intraday)
-  const isAboveEMA = price > ema200;
-  if (signal.type === "bullish" && !isAboveEMA) return false;
-  if (signal.type === "bearish" && isAboveEMA) return false;
+  // 1. Trend Filter: Price vs EMA200 (Optional)
+  if (config.useEmaFilter) {
+    const isAboveEMA = price > ema200;
+    if (signal.type === "bullish" && !isAboveEMA) {
+      console.log(`[Scanner] Rejection: Bullish signal below EMA 200 (Price: ${price}, EMA: ${ema200})`);
+      return false;
+    }
+    if (signal.type === "bearish" && isAboveEMA) {
+      console.log(`[Scanner] Rejection: Bearish signal above EMA 200 (Price: ${price}, EMA: ${ema200})`);
+      return false;
+    }
+  }
 
-  // 2. MACD Crossover Filter (Strict)
-  return isMACDCrossover(macds, signal.type, config.macdCrossoverLookback);
+  // 2. MACD Crossover Filter (Optional)
+  if (config.useMacdFilter) {
+    const hasMACDCrossover = isMACDCrossover(macds, signal.type, config.macdCrossoverLookback);
+    if (!hasMACDCrossover) {
+      console.log(`[Scanner] Rejection: No MACD ${signal.type} crossover within ${config.macdCrossoverLookback} candles`);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -74,9 +90,13 @@ export async function scanSymbolTimeframe(
 
   // 1. Fetch candles
   const candles = await fetchCandles(symbol, timeframe, config.candleLimit);
-  if (candles.length < config.emaPeriod) {
+  
+  // Minimum candles needed for RSI (rsiPeriod * 2 for stability) and MACD (macdSlow)
+  const minRequired = Math.max(config.rsiPeriod * 2, config.macdSlow + config.macdSignal);
+  
+  if (candles.length < minRequired) {
     console.log(
-      `[Scanner] Not enough candles for ${symbol} ${timeframe} (got ${candles.length})`,
+      `[Scanner] Not enough candles for ${symbol} ${timeframe} (got ${candles.length}, need ${minRequired})`,
     );
     return result;
   }
@@ -92,7 +112,13 @@ export async function scanSymbolTimeframe(
   const currentEMA = ema200Values[lastIndex];
   const currentMACD = macdValues[lastIndex];
 
-  if (isNaN(currentEMA) || !currentMACD) {
+  // EMA might be NaN if not enough candles, but only block if EMA filter is ON
+  if (config.useEmaFilter && isNaN(currentEMA)) {
+    console.log(`[Scanner] Skipping ${symbol} ${timeframe}: EMA filter ON but not enough candles for EMA calculation`);
+    return result;
+  }
+
+  if (!currentMACD) {
     return result;
   }
 
@@ -127,7 +153,7 @@ export async function scanSymbolTimeframe(
       
       const icon = signal.type === "bullish" ? "🟢" : "🔴";
       console.log(
-        `[Scanner] ${icon} ${signal.category.toUpperCase()} ${signal.type} divergence on ${symbol} ${timeframe} ` +
+        `[Scanner] ${icon} VALIDATED ${signal.category.toUpperCase()} ${signal.type} divergence on ${symbol} ${timeframe} ` +
         `| Price: ${signal.currentPivot.price} | RSI: ${signal.currentPivot.rsi.toFixed(2)}`
       );
     }

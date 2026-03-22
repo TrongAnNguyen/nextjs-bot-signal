@@ -29,6 +29,10 @@ export async function runScanCycle(bot?: Telegraf): Promise<void> {
   const start = Date.now();
   console.log(`\n⏳ [${new Date().toISOString()}] Starting scan cycle...`);
 
+  if (!config.telegramBotToken || !config.telegramChatId) {
+    console.warn("⚠️  TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing — results will only log to console");
+  }
+
   try {
     // 1. Scan all symbols × all timeframes
     const results = await scanAll(config.symbols, config.timeframes);

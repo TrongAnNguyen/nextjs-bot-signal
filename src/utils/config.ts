@@ -41,6 +41,10 @@ export const config = {
   minPivotDistance: Number(process.env.MIN_PIVOT_DISTANCE) || 5,
   maxPivotDistance: Number(process.env.MAX_PIVOT_DISTANCE) || 50,
   hiddenDivergenceLookback: 5,
+
+  // --- Filter Toggles ---
+  useEmaFilter: process.env.USE_EMA_FILTER === "true", // Default to false
+  useMacdFilter: process.env.USE_MACD_FILTER !== "false", // Default to true
 } as const;
 
 export type Config = typeof config;
